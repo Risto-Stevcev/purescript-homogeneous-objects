@@ -17,7 +17,9 @@
   ],
   "dependencies": {
     "purescript-tuples": "1.x",
-    "purescript-functions": "1.x"
+    "purescript-functions": "1.x",
+    "purescript-argonaut-core": "1.x",
+    "purescript-argonaut-codecs": "1.x"
   },
   "devDependencies": {
     "purescript-maybe": "1.x",
