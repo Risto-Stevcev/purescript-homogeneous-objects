@@ -1,12 +1,11 @@
 module Data.HObject.Record where
 
 import Prelude (($), bind, pure, show)
-import Data.Either
-import Data.HObject
-import Data.Foreign
-import Data.Foreign.Class
+import Data.Either (Either(..), either)
+import Data.HObject (HObject)
+import Data.Foreign (ForeignError, Foreign, toForeign)
+import Data.Foreign.Class (class IsForeign, readProp, read)
 import Data.Argonaut.Core (Json)
-import Data.Argonaut.Encode.Class (class EncodeJson)
 import Control.Monad.Eff.Exception (Error, error)
 
 
@@ -25,7 +24,9 @@ foreign import structName :: forall a . a -> String
 
 
 -- | Reads the Foreign value of a unary kinded type
+readType :: forall a b. IsForeign a => (a -> b) -> Foreign -> Either ForeignError b
 readType = readType1
+
 readType1 :: forall a b. IsForeign a => (a -> b) -> Foreign -> Either ForeignError b
 readType1 f value = either Left (\r -> Right (f r)) (readProp "value0" value)
 

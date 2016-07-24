@@ -17,9 +17,9 @@ import Test.Unit.Assert (assert)
 import Test.Unit.Console (TESTOUTPUT)
 
 
-{-
- - Json to Record
- -}
+
+-- | Json to Record
+-- | --------------
 data Foo = Foo { foo :: Int, bar :: { baz :: Int, qux :: { norf :: Int } }, worble :: Int }
 
 -- | Defines how to construct Foreign (internally a Json) into a Foo record
@@ -34,9 +34,9 @@ instance fooIsForeign :: IsForeign Foo where
     pure $ Foo { foo: foo, bar: { baz: baz, qux: { norf: norf } }, worble: worble }
 
 
-{-
- - HObject to Record
- -}
+
+-- | Unary HObject to Record
+-- | -----------------------
 data UnaryType = I Int | S String | B Boolean
 data UnaryHObj = UnaryHObj { foo :: UnaryType, bar :: { baz :: UnaryType }, qux :: UnaryType }
 
@@ -65,9 +65,8 @@ instance unaryHObjIsForeign :: IsForeign UnaryHObj where
 
 
 
-{-
- - HObject with multiple constructors to Record
- -}
+-- | NAry HObject to Record
+-- | ----------------------
 data NAryType = IS Int String | ISB Int String Boolean
 data NAryTypeHObj = NAryTypeHObj { foo :: NAryType, bar :: { baz :: NAryType }, qux :: NAryType }
 
@@ -93,6 +92,7 @@ instance nAryHObjIsForeign :: IsForeign NAryTypeHObj where
 
 
 -- | Some sample types
+-- | -----------------
 sampleJson :: Json
 sampleJson = hJson [ "foo" -= 1
                     , "bar" -< [ "baz" -= 1
@@ -115,7 +115,8 @@ nAryHObj = hObj [ "foo" -= IS 2 "hello"
 
 
 
--- | Converting the sample types to Records
+-- | Converting sample types to Records
+-- | ----------------------------------
 sampleJson' :: Either Error Foo
 sampleJson' = jsonToRecord sampleJson 
 
@@ -128,6 +129,7 @@ nAryHObj' = hObjToRecord nAryHObj
 
 
 -- | Test helpers
+-- | ------------
 testFoo :: forall a. Either Error Foo -> Aff a Unit
 testFoo (Left err) = assert (message err) false
 testFoo (Right (Foo rec)) = do
@@ -165,7 +167,7 @@ testNaryHObj (Right (NAryTypeHObj rec)) = do
 
 
 
-main :: forall a. Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT | a ) Unit
+main :: Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
 main = runTest do
   suite "Data.HObject.Record" do
     test "jsonToRecord" do
