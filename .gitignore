@@ -5,3 +5,5 @@
 /.psci*
 /*.tix
 /src/.webpack.js
+token.txt
+pursuit.json*

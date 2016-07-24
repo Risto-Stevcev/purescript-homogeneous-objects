@@ -1,7 +1,8 @@
-module Test.HObject where
+module Test.Data.HObject where
 
-import HObject (HObject, TupleTree, hObj, hJson, mkTree, (-=), (-<))
-import Prelude (class Show, Unit, show, bind, (==), ($))
+import Prelude (class Show, Unit, show, bind, ($), (==))
+import Data.HObject (HObject, TupleTree, hObj, hJson, mkTree, hObjToJson, (-=), (-<))
+import Data.Maybe (Maybe(..))
 import Data.Argonaut.Core (Json, fromString)
 import Data.Argonaut.Encode.Class (class EncodeJson)
 import Control.Monad.Eff (Eff)
@@ -10,7 +11,6 @@ import Test.Unit (test, suite)
 import Test.Unit.Main (runTest)
 import Test.Unit.Assert (assert)
 import Test.Unit.Console (TESTOUTPUT)
-import Data.Maybe (Maybe(..))
 
 
 data SampleType = StrType | NumType | BoolType
@@ -60,10 +60,11 @@ sampleHObj = hObj [ "foo" -= StrType
                   ]
 
 
-main :: forall a. Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT | a ) Unit
+
+main :: Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
 main = runTest do
-  suite "HObject" do
-    test "mkTree" $
+  suite "Data.HObject" do
+    test "mkTree" do
       assert "sampleTree" $ (show sampleTree) == "[(Tuple \"foo\" 3),(Tuple \"bar\" [(Tuple \"baz\" 4)])]"
     test "hJson" do
       assert "sampleJson1" $ (show sampleJson1) == "{\"foo\":1,\"bar\":{\"baz\":1,\"qux\":{\"norf\":2}},\"worble\":3}"
@@ -71,3 +72,5 @@ main = runTest do
       assert "sampleJson3" $ (show sampleJson3) == "{\"foo\":\"String\",\"bar\":{\"baz\":\"Boolean\"},\"qux\":\"Number\"}"
     test "hObj" $
       assert "sampleHObj" $ (show sampleHObj) == "{ foo: [Fn String], { bar: { baz: [Fn Boolean] } }, qux: [Fn Number] }"
+    test "hObjToJson" $
+      assert "hObjToJson" $ (show sampleJson3) == (show $ hObjToJson sampleHObj)

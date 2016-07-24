@@ -27,3 +27,15 @@ exports._serialize = function _serialize(record, show) {
       return key +': '+ show(record[key]);
   }).join(', ') +' }';
 }
+
+exports.hObjToJson = function(encode) {
+  return function toJson(obj) {
+    return Object.keys(obj).reduce(function(jsonObj, key) {
+      if (obj[key].constructor.name === 'Object')
+        jsonObj[key] = toJson(obj[key]);
+      else
+        jsonObj[key] = encode.encodeJson(obj[key]);
+      return jsonObj;
+    }, {});
+  }
+}

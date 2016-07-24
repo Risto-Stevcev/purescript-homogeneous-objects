@@ -1,4 +1,4 @@
-module HObject
+module Data.HObject
   ( (-=)
   , (-<)
   , mkLeaf
@@ -6,6 +6,7 @@ module HObject
   , mkTree
   , hJson
   , hObj
+  , hObjToJson
   , TupleTree
   , HObject 
   ) where
@@ -70,3 +71,6 @@ foreign import _toJson :: forall a. Fn2 (TupleTree a) (a -> Json) Json
 foreign import _toObject :: forall a. TupleTree a -> HObject a
 
 foreign import _serialize :: forall a. Fn2 (HObject a) (a -> String) String
+
+-- | Converts an hObject to Json
+foreign import hObjToJson :: forall a. EncodeJson a => HObject a -> Json
