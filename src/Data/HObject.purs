@@ -8,7 +8,7 @@ module Data.HObject
   , hObj
   , hObjToJson
   , TupleTree
-  , HObject 
+  , HObject
   ) where
 
 import Prelude (class Show, show, (<<<))
@@ -58,7 +58,7 @@ instance showTupleTree :: Show a => Show (TupleTree a) where
 
 
 
--- | If a homogenous record is needed but not used by the FFI, a TupleTree might work better since you can make use 
+-- | If a homogenous record is needed but not used by the FFI, a TupleTree might work better since you can make use
 -- | of the instances of the Tuple class
 data TupleTree a = Leaf a | Branch (Array (Tuple String (TupleTree a)))
 

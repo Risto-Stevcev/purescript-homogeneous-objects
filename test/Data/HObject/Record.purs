@@ -2,12 +2,13 @@ module Test.Data.HObject.Record where
 
 import Prelude (class Show, Unit, bind, show, pure, (==), ($), (&&), (<>))
 import Data.HObject (HObject, hObj, hJson, (-=), (-<))
-import Data.HObject.Record (hObjToRecord, jsonToRecord, readType3, readType2, readType, structName)
+import Data.HObject.Record (hObjToRecord, jsonToRecord, structName)
 import Data.Either (Either(..))
 import Data.Foreign (ForeignError(..))
 import Data.Foreign.Class (class IsForeign, readProp)
 import Data.Argonaut.Core (Json)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (Error, message)
@@ -45,24 +46,6 @@ instance showUnaryType :: Show UnaryType where
   show (S a) = show a
   show (B a) = show a
 
--- | Defines how to construct Foreign (internally a UnaryType) into a UnaryType 
-instance unaryTypeIsForeign :: IsForeign UnaryType where
-  read value =
-    case structName value of
-      "I" -> readType I value
-      "S" -> readType S value
-      "B" -> readType B value
-      a   -> Left (TypeMismatch "I, S, or B" a)
-
--- | Defines how to construct Foreign (internally an HObject) into a UnaryHObj
-instance unaryHObjIsForeign :: IsForeign UnaryHObj where
-  read obj = do
-    foo <- readProp "foo" obj
-    bar <- readProp "bar" obj
-    baz <- readProp "baz" bar
-    qux <- readProp "qux" obj
-    pure $ UnaryHObj { foo: foo, bar: { baz: baz }, qux: qux }
-
 
 
 -- | NAry HObject to Record
@@ -74,20 +57,7 @@ instance showNAryType :: Show NAryType where
   show (IS a b) = show a <> show b
   show (ISB a b c) = show a <> show b <> show c
 
-instance nAryTypeIsForeign :: IsForeign NAryType where
-  read value =
-    case structName value of
-      "IS"  -> readType2 IS value
-      "ISB" -> readType3 ISB value
-      a   -> Left (TypeMismatch "IS or ISB" a)
 
-instance nAryHObjIsForeign :: IsForeign NAryTypeHObj where
-  read obj = do
-    foo <- readProp "foo" obj
-    bar <- readProp "bar" obj
-    baz <- readProp "baz" bar
-    qux <- readProp "qux" obj
-    pure $ NAryTypeHObj { foo: foo, bar: { baz: baz }, qux: qux }
 
 
 
@@ -95,37 +65,30 @@ instance nAryHObjIsForeign :: IsForeign NAryTypeHObj where
 -- | -----------------
 sampleJson :: Json
 sampleJson = hJson [ "foo" -= 1
-                    , "bar" -< [ "baz" -= 1
-                               , "qux" -< [ "norf" -= 2 ]
-                               ]
-                    , "worble" -= 3
-                    ]
+                   , "bar" -< [ "baz" -= 1
+                              , "qux" -< [ "norf" -= 2 ]
+                              ]
+                   , "worble" -= 3
+                   ]
 
 unaryHObj :: HObject UnaryType
 unaryHObj = hObj [ "foo" -= I 2
-                  , "bar" -< [ "baz" -= B true ]
-                  , "qux" -= S "norf"
-                  ]
+                 , "bar" -< [ "baz" -= B true ]
+                 , "qux" -= S "norf"
+                 ]
 
 nAryHObj :: HObject NAryType
 nAryHObj = hObj [ "foo" -= IS 2 "hello"
-                   , "bar" -< [ "baz" -= ISB 3 "world" true ]
-                   , "qux" -= IS 4 "norf"
-                   ]
+                , "bar" -< [ "baz" -= ISB 3 "world" true ]
+                , "qux" -= IS 4 "norf"
+                ]
 
 
 
 -- | Converting sample types to Records
 -- | ----------------------------------
 sampleJson' :: Either Error Foo
-sampleJson' = jsonToRecord sampleJson 
-
-unaryHObj' :: Either Error UnaryHObj
-unaryHObj' = hObjToRecord unaryHObj
-
-nAryHObj' :: Either Error NAryTypeHObj
-nAryHObj' = hObjToRecord nAryHObj
-
+sampleJson' = jsonToRecord sampleJson
 
 
 -- | Test helpers
@@ -139,7 +102,7 @@ testFoo (Right (Foo rec)) = do
   assert "Foo.worble"       $ (rec.worble == 3)
 
 
-testUnaryType :: UnaryType -> UnaryType -> Boolean 
+testUnaryType :: UnaryType -> UnaryType -> Boolean
 testUnaryType (I a) (I b) = a == b
 testUnaryType (S a) (S b) = a == b
 testUnaryType (B a) (B b) = a == b
@@ -167,13 +130,9 @@ testNaryHObj (Right (NAryTypeHObj rec)) = do
 
 
 
-main :: Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
+main :: Eff ( avar :: AVAR, console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
 main = runTest do
   suite "Data.HObject.Record" do
     test "jsonToRecord" do
       assert "sampleJson" $ (show sampleJson) == "{\"foo\":1,\"bar\":{\"baz\":1,\"qux\":{\"norf\":2}},\"worble\":3}"
       testFoo sampleJson'
-
-    test "hObjToRecord" do
-      testUnaryHObj unaryHObj'
-      testNaryHObj nAryHObj'

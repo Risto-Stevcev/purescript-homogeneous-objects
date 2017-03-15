@@ -22,7 +22,7 @@ bar = [ "foo" /^\ true
 data Baz = Qux Int | Norf String
 
 instance intToBaz :: Primitive Int Baz where
-  mkPrim = Qux 
+  mkPrim = Qux
 
 instance strToBaz :: Primitive String Baz where
   mkPrim = Norf

@@ -7,6 +7,7 @@ import Data.Argonaut.Core (Json, fromString)
 import Data.Argonaut.Encode.Class (class EncodeJson)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Aff.AVar (AVAR)
 import Test.Unit (test, suite)
 import Test.Unit.Main (runTest)
 import Test.Unit.Assert (assert)
@@ -61,7 +62,7 @@ sampleHObj = hObj [ "foo" -= StrType
 
 
 
-main :: Eff ( console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
+main :: Eff ( avar :: AVAR, console :: CONSOLE, testOutput :: TESTOUTPUT ) Unit
 main = runTest do
   suite "Data.HObject" do
     test "mkTree" do
