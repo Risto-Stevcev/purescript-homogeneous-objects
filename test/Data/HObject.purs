@@ -1,6 +1,6 @@
 module Test.Data.HObject where
 
-import Prelude (class Show, Unit, show, bind, ($), (==))
+import Prelude (class Show, Unit, show, ($), (==), discard)
 import Data.HObject (HObject, TupleTree, hObj, hJson, mkTree, hObjToJson, (-=), (-<))
 import Data.Maybe (Maybe(..))
 import Data.Argonaut.Core (Json, fromString)
