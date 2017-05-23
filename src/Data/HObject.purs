@@ -64,7 +64,7 @@ data TupleTree a = Leaf a | Branch (Array (Tuple String (TupleTree a)))
 
 -- | The HObject type is provided for more complex types that are not meant to be JSON encoded but still need to be
 -- | accessed by the FFI. It is interally represented as a homogenous JSON object
-foreign import data HObject :: * -> *
+foreign import data HObject :: Type -> Type
 
 foreign import _toJson :: forall a. Fn2 (TupleTree a) (a -> Json) Json
 

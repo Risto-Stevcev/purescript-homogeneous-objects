@@ -1,21 +1,21 @@
 module Test.Data.HObject.Record where
 
-import Prelude (class Show, Unit, bind, show, pure, (==), ($), (&&), (<>))
-import Data.HObject (HObject, hObj, hJson, (-=), (-<))
-import Data.HObject.Record (hObjToRecord, jsonToRecord, structName)
-import Data.Either (Either(..))
-import Data.Foreign (ForeignError(..))
-import Data.Foreign.Class (class IsForeign, readProp)
-import Data.Argonaut.Core (Json)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (Error, message)
+import Data.Argonaut.Core (Json)
+import Data.Either (Either(..))
+import Data.Foreign (F, Foreign, readInt)
+import Data.Foreign.Index (readProp)
+import Data.HObject (HObject, hObj, hJson, (-=), (-<))
+import Data.HObject.Record (jsonToRecord)
+import Prelude (class Show, Unit, bind, discard, pure, show, ($), (&&), (<>), (=<<), (==))
 import Test.Unit (test, suite)
-import Test.Unit.Main (runTest)
 import Test.Unit.Assert (assert)
 import Test.Unit.Console (TESTOUTPUT)
+import Test.Unit.Main (runTest)
 
 
 
@@ -24,15 +24,15 @@ import Test.Unit.Console (TESTOUTPUT)
 data Foo = Foo { foo :: Int, bar :: { baz :: Int, qux :: { norf :: Int } }, worble :: Int }
 
 -- | Defines how to construct Foreign (internally a Json) into a Foo record
-instance fooIsForeign :: IsForeign Foo where
-  read obj = do
-    foo <- readProp "foo" obj
-    bar <- readProp "bar" obj
-    baz <- readProp "baz" bar
-    qux <- readProp "qux" bar
-    norf <- readProp "norf" qux
-    worble <- readProp "worble" obj
-    pure $ Foo { foo: foo, bar: { baz: baz, qux: { norf: norf } }, worble: worble }
+readFoo :: Foreign -> F Foo
+readFoo obj = do
+  foo <- readInt =<< readProp "foo" obj
+  bar <- readProp "bar" obj
+  baz <- readInt =<< readProp "baz" bar
+  qux <- readProp "qux" bar
+  norf <- readInt =<< readProp "norf" qux
+  worble <- readInt =<< readProp "worble" obj
+  pure $ Foo { foo: foo, bar: { baz: baz, qux: { norf: norf } }, worble: worble }
 
 
 
@@ -88,7 +88,7 @@ nAryHObj = hObj [ "foo" -= IS 2 "hello"
 -- | Converting sample types to Records
 -- | ----------------------------------
 sampleJson' :: Either Error Foo
-sampleJson' = jsonToRecord sampleJson
+sampleJson' = jsonToRecord readFoo sampleJson
 
 
 -- | Test helpers
@@ -116,7 +116,7 @@ testUnaryHObj (Right (UnaryHObj rec)) = do
   assert "UnaryHObj.qux"     $ testUnaryType rec.qux     (S "norf")
 
 
-testNAryType :: NAryType -> NAryType -> Boolean 
+testNAryType :: NAryType -> NAryType -> Boolean
 testNAryType (IS a b)    (IS a' b')     = a == a' && b == b'
 testNAryType (ISB a b c) (ISB a' b' c') = a == a' && b == b' && c == c'
 testNAryType _     _     = false
