@@ -7,7 +7,8 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (Error, message)
 import Data.Argonaut.Core (Json)
 import Data.Either (Either(..))
-import Data.Foreign (F, Foreign, readInt)
+import Data.Foreign (readInt)
+import Data.Foreign.Class (class Decode)
 import Data.Foreign.Index (readProp)
 import Data.HObject (HObject, hObj, hJson, (-=), (-<))
 import Data.HObject.Record (jsonToRecord)
@@ -24,15 +25,15 @@ import Test.Unit.Main (runTest)
 data Foo = Foo { foo :: Int, bar :: { baz :: Int, qux :: { norf :: Int } }, worble :: Int }
 
 -- | Defines how to construct Foreign (internally a Json) into a Foo record
-readFoo :: Foreign -> F Foo
-readFoo obj = do
-  foo <- readInt =<< readProp "foo" obj
-  bar <- readProp "bar" obj
-  baz <- readInt =<< readProp "baz" bar
-  qux <- readProp "qux" bar
-  norf <- readInt =<< readProp "norf" qux
-  worble <- readInt =<< readProp "worble" obj
-  pure $ Foo { foo: foo, bar: { baz: baz, qux: { norf: norf } }, worble: worble }
+instance decodeFoo :: Decode Foo where
+  decode obj = do
+    foo <- readInt =<< readProp "foo" obj
+    bar <- readProp "bar" obj
+    baz <- readInt =<< readProp "baz" bar
+    qux <- readProp "qux" bar
+    norf <- readInt =<< readProp "norf" qux
+    worble <- readInt =<< readProp "worble" obj
+    pure $ Foo { foo: foo, bar: { baz: baz, qux: { norf: norf } }, worble: worble }
 
 
 
@@ -88,7 +89,7 @@ nAryHObj = hObj [ "foo" -= IS 2 "hello"
 -- | Converting sample types to Records
 -- | ----------------------------------
 sampleJson' :: Either Error Foo
-sampleJson' = jsonToRecord readFoo sampleJson
+sampleJson' = jsonToRecord sampleJson
 
 
 -- | Test helpers
